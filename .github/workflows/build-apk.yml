@@ -4,62 +4,50 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
-    inputs:
-      build_type:
-        description: 'Build type'
-        required: true
-        type: choice
-        options:
-          - debug
-          - release
-        default: 'debug'
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-    - name: Install client dependencies
-      run: |
-        cd client
-        npm install
+      - name: Install client dependencies
+        run: |
+          cd client
+          npm install
 
-    - name: Prebuild native code
-      run: |
-        cd client
-        npx expo prebuild --clean --platform android
+      - name: Prebuild native code
+        run: |
+          cd client
+          npx expo prebuild --clean --platform android
 
-    - name: Build APK
-      env:
-        BUILD_TYPE: ${{ github.event.inputs.build_type || 'debug' }}
-      run: |
-        cd client/android
-        if [ "$BUILD_TYPE" = "release" ]; then
+      - name: Grant execute permission for gradlew
+        run: chmod +x client/android/gradlew
+
+      - name: Build Release APK
+        run: |
+          cd client/android
           ./gradlew assembleRelease
-        else
-          ./gradlew assembleDebug
-        fi
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-${{ github.event.inputs.build_type || 'debug' }}-apk
-        path: client/android/app/build/outputs/apk/**/*.apk
-        retention-days: 30
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: huluwa-release-apk
+          path: client/android/app/build/outputs/apk/release/*.apk
+          retention-days: 30
