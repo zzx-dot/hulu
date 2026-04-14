@@ -18,6 +18,11 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -27,13 +32,8 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install root dependencies
-        run: npm install
-
-      - name: Install client dependencies
-        run: |
-          cd client
-          npm install
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Prebuild native code
         run: |
